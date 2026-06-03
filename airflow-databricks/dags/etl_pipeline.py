@@ -1,0 +1,42 @@
+from datetime import datetime
+from airflow import DAG
+from airflow.providers.databricks.operators.databricks import DatabricksRunNowOperator
+from base_pipeline import BasePipeline
+
+
+class EtlPipeline(BasePipeline):
+
+    def build(self) -> DAG:
+        with DAG(
+            dag_id="etl_pipeline",
+            start_date=datetime(2026, 6, 3),
+            #         m h d m wd
+            schedule="0 6 * * *",    
+            catchup=False,
+            default_args=self.DEFAULT_ARGS,
+        ) as dag:
+
+            bronze_ingest = DatabricksRunNowOperator(
+                task_id="bronze_ingest",
+                databricks_conn_id=self.DATABRICKS_CONN_ID,
+                job_id=self.get_job_id("bronze_ingest"),
+            )
+
+            silver_transform = DatabricksRunNowOperator(
+                task_id="silver_transform",
+                databricks_conn_id=self.DATABRICKS_CONN_ID,
+                job_id=self.get_job_id("silver_transform"),
+            )
+
+            gold_aggregate = DatabricksRunNowOperator(
+                task_id="gold_aggregate",
+                databricks_conn_id=self.DATABRICKS_CONN_ID,
+                job_id=self.get_job_id("gold_aggregate"),
+            )
+
+            bronze_ingest >> silver_transform >> gold_aggregate
+
+        return dag
+
+
+dag = EtlPipeline().build()
