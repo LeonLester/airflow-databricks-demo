@@ -2,7 +2,6 @@
 
 Learning project exploring how to use **Apache Airflow** to orchestrate **Databricks** jobs properly.
 
-
 ## The problem we're solving
 
 Imagine you work at a company and every morning at 6am you need to:
@@ -30,3 +29,50 @@ So, we're going to build this DAG:
     → triggers Databricks Job C (aggregate for reporting)
 ```
 
+## Role
+
+Senior data engineer on a team doing bronze ingestion into Databricks (Spark jobs).
+
+## Hard Requirements
+
+- **Airflow** for orchestration
+- **Databricks** for execution (Spark jobs)
+
+## The Real Problem to Solve
+
+Airflow and Databricks are two separate systems with two separate deployment artifacts:
+
+- Airflow deploys **DAG files** (Python)
+- Databricks deploys **notebooks / jobs** (also Python, but deployed differently)
+
+Without structure, juniors will:
+
+- Duplicate configuration between the two systems (cluster sizes, retry counts, job params defined in both places)
+- Let the two systems drift (Airflow says run job X with param Y, but job X no longer exists in Databricks, or was renamed)
+- Hardcode secrets, job IDs, and environment-specific values in DAG files
+- Have no clear answer to "where does this config live?"
+
+## What a Good Solution Looks Like
+
+A monorepo where:
+
+1. **Airflow code** (DAGs, operators, callbacks) and **Databricks code** (notebooks) live side by side in version control
+2. There is one source of truth for job IDs, cluster configs, and parameters — not duplicated across files
+3. Deployment is automated and environment-aware (dev vs prod configs not hardcoded)
+4. A junior can follow the pattern without needing to understand both systems deeply
+5. Drift is caught early — ideally by CI, not by a 3am failure
+
+## Architecture Principle
+
+**Airflow orchestrates. Databricks executes. They do not overlap.**
+
+- Airflow should not know about cluster sizing, Spark configs, or data schemas
+- Databricks notebooks should not know about scheduling, retries, or pipeline dependencies
+- Parameters flow one way: Airflow → Databricks (via notebook params / job params)
+
+## Open Questions to Answer as We Build
+
+- Where do job IDs live, and how do they stay in sync across environments?
+- How do we deploy notebooks to Databricks without manual copy-paste?
+- How do we prevent the same retry logic from being configured in both Airflow and Databricks?
+- How do we handle dev/staging/prod without duplicating DAG files?
