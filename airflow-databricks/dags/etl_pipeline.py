@@ -15,3 +15,11 @@ with DAG(
         databricks_conn_id=DATABRICKS_CONN_ID,
         job_id=JOB_IDS["bronze_ingest"],
     )
+
+    silver_transform = DatabricksRunNowOperator(
+        task_id="silver_transform",
+        databricks_conn_id=DATABRICKS_CONN_ID,
+        job_id=JOB_IDS["silver_transform"],
+    )
+
+    bronze_ingest >> silver_transform
