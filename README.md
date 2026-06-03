@@ -62,6 +62,27 @@ A monorepo where:
 4. A junior can follow the pattern without needing to understand both systems deeply
 5. Drift is caught early — ideally by CI, not by a 3am failure
 
+## Pipeline
+
+```
+bronze_ingest -> silver_transform -> gold_aggregate
+```
+
+Each arrow is a hard dependency. Silver only runs if Bronze succeeds. Gold only runs if Silver succeeds. Failure at any step stops the pipeline, retries twice with a 5-minute delay, then fires the failure callback.
+
+- **Bronze**: raw events written to a Delta table as-is, duplicates included. No transformations. The point of Bronze is to have an exact record of what arrived.
+- **Silver**: deduplication, null removal, timestamp parsing. This is where data becomes trustworthy.
+- **Gold**: aggregated by user and event type. This is what analysts and dashboards read from.
+
+## Repo structure
+
+```
+dags/
+  config.py          # job IDs per environment, one place
+  base_pipeline.py   # retries, failure callbacks, connection config
+  etl_pipeline.py    # pipeline definition, nothing else
+```
+
 ## Architecture Principle
 
 **Airflow orchestrates. Databricks executes. They do not overlap.**
@@ -72,7 +93,19 @@ A monorepo where:
 
 ## Open Questions to Answer as We Build
 
-- Where do job IDs live, and how do they stay in sync across environments?
-- How do we deploy notebooks to Databricks without manual copy-paste?
-- How do we prevent the same retry logic from being configured in both Airflow and Databricks?
-- How do we handle dev/staging/prod without duplicating DAG files?
+### Where do job IDs live, and how do they stay in sync across environments?
+
+`config.py` is the single source of truth for Databricks job IDs. No DAG file contains a job ID directly. When a job is recreated in Databricks (which changes its ID), you update one file. A junior adding a new job touches only `config.py`.
+
+### How do we deploy notebooks to Databricks without manual copy-paste?
+
+Notebooks live in this repo under `notebooks/` and are connected to Databricks via Databricks Repos. Databricks pulls from the repo directly. There is no separate deploy step for notebooks and no manual copy-paste. When a notebook changes and is merged to main, the Databricks workspace reflects it on the next pull.
+
+### How do we prevent the same retry logic from being configured in both Airflow and Databricks?
+
+Retries are configured in `base_pipeline.py` via `DEFAULT_ARGS` and applied to every task through inheritance. They are disabled in the Databricks job config. Configuring retries in both places causes double-retrying on failure, which is no bueno. Airflow owns retries.
+
+### How do we handle dev/staging/prod without duplicating DAG files?
+
+The DAG structure does not change. The Databricks connection and the `env` variable are configured in the managed service instead of the local UI.
+Promoting to prod is three steps: create the Databricks jobs in the prod workspace, fill in the prod job IDs in `config.py`, change the `env` variable to `prod`.
