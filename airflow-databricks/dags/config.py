@@ -6,10 +6,12 @@ _JOB_IDS = {
     "dev": {
         "bronze_ingest": 421658606944721,
         "silver_transform": 921960675949165,
+        "gold_aggregate": 245154755026905,
     },
     "prod": {
         "bronze_ingest": None,
         "silver_transform": None,
+        "gold_aggregate": None,
     },
 }
 

@@ -27,10 +27,15 @@ class EtlPipeline(BasePipeline):
                 job_id=self.get_job_id("silver_transform"),
             )
 
-            bronze_ingest >> silver_transform
+            gold_aggregate = DatabricksRunNowOperator(
+                task_id="gold_aggregate",
+                databricks_conn_id=self.DATABRICKS_CONN_ID,
+                job_id=self.get_job_id("gold_aggregate"),
+            )
+
+            bronze_ingest >> silver_transform >> gold_aggregate
 
         return dag
 
 
-#Airflow needs the DAG object at module level to find it
 dag = EtlPipeline().build()
