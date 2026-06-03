@@ -9,8 +9,9 @@ class EtlPipeline(BasePipeline):
     def build(self) -> DAG:
         with DAG(
             dag_id="etl_pipeline",
-            start_date=datetime(2024, 1, 1),
-            schedule=None,
+            start_date=datetime(2026, 6, 3),
+            #         m h d m wd
+            schedule="0 6 * * *",    
             catchup=False,
             default_args=self.DEFAULT_ARGS,
         ) as dag:
