@@ -81,7 +81,13 @@ dags/
   config.py          # job IDs per environment, one place
   base_pipeline.py   # retries, failure callbacks, connection config
   etl_pipeline.py    # pipeline definition, nothing else
+notebooks/
+  bronze_ingest.py   # raw ingestion into Delta
+  silver_transform.py  # deduplication and cleaning
+  gold_aggregate.py  # aggregation for reporting
 ```
+
+Notebooks live here and are synced to Databricks via Databricks Repos (see below). There is no separate deploy step for notebooks.
 
 ## Architecture Principle
 
@@ -97,9 +103,11 @@ dags/
 
 `config.py` is the single source of truth for Databricks job IDs. No DAG file contains a job ID directly. When a job is recreated in Databricks (which changes its ID), you update one file. A junior adding a new job touches only `config.py`.
 
-### How do we deploy notebooks to Databricks without manual copy-paste?
+### How do notebooks stay in sync without manual copy-paste?
 
-Notebooks live in this repo under `notebooks/` and are connected to Databricks via Databricks Repos. Databricks pulls from the repo directly. There is no separate deploy step for notebooks and no manual copy-paste. When a notebook changes and is merged to main, the Databricks workspace reflects it on the next pull.
+Databricks Repos connects directly to this GitHub repo. When a notebook changes and is pushed, the Databricks workspace reflects it on the next pull. No copy-paste, no separate deploy script.
+
+To connect: in Databricks, go to Workspace -> Repos -> Add repo, paste the GitHub URL. Databricks will clone the repo and make the notebooks available at `/Repos/<your-name>/<repo-name>/notebooks/`.
 
 ### How do we prevent the same retry logic from being configured in both Airflow and Databricks?
 
@@ -109,3 +117,45 @@ Retries are configured in `base_pipeline.py` via `DEFAULT_ARGS` and applied to e
 
 The DAG structure does not change. The Databricks connection and the `env` variable are configured in the managed service instead of the local UI.
 Promoting to prod is three steps: create the Databricks jobs in the prod workspace, fill in the prod job IDs in `config.py`, change the `env` variable to `prod`.
+
+## Local setup
+
+Requires Docker.
+
+```bash
+make init    # initialise the database and create the admin user
+make start   # start webserver and scheduler
+```
+
+Open http://localhost:8081 with `admin` / `admin`.
+
+Add the Databricks connection under Admin -> Connections:
+
+| Field | Value |
+|---|---|
+| Conn Id | `databricks_default` |
+| Conn Type | `Databricks` |
+| Host | your workspace URL |
+| Password | your PAT token |
+
+Set the `env` variable under Admin -> Variables to `dev`.
+
+Update `config.py` with your actual Databricks job IDs, then trigger `etl_pipeline` manually to verify the end-to-end connection.
+
+## Connecting Databricks Repos to this repo
+
+1. In Databricks, click Workspace in the left sidebar
+2. Click the Repos tab
+3. Click Add repo
+4. Paste the GitHub URL of this repo
+5. Click Create
+
+Databricks will clone the repo. The notebooks are now available at `/Repos/<your-username>/<repo-name>/notebooks/`. Point each Databricks Job at the notebook path under Repos rather than a standalone notebook path so updates to the repo are picked up automatically.
+
+To pull the latest changes after a push: open any notebook in the repo, click the branch name at the top, and click Pull.
+
+## What production looks like
+
+In production, Airflow runs on a managed service (MWAA, Cloud Composer, or Astronomer), not Docker Compose. The DAG structure does not change. The Databricks connection and the `env` variable are configured in the managed service instead of the local UI.
+
+Promoting to prod is three steps: create the Databricks jobs in the prod workspace pointing at the Repos path, fill in the prod job IDs in `config.py`, change the `env` variable to `prod`. No DAG files change.
