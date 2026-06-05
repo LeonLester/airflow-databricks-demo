@@ -41,7 +41,7 @@ jobs:
         uses: databricks/setup-cli@v1.2.1
 
       - name: Deploy bundle
-        working-directory: airflow-databricks/infra
+        working-directory: infra
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
@@ -60,7 +60,7 @@ jobs:
         uses: databricks/setup-cli@v1.2.1
 
       - name: Deploy bundle
-        working-directory: airflow-databricks/infra
+        working-directory: infra
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_PROD }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_PROD }}
