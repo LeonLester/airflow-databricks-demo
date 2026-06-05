@@ -4,9 +4,10 @@ DATABRICKS_CONN_ID = "databricks_default"
 
 _JOB_IDS = {
     "dev": {
-        "bronze_ingest": 421658606944721,
-        "silver_transform": 921960675949165,
-        "gold_aggregate": 245154755026905,
+        # IDs managed by DAB. run `databricks bundle deploy`
+        "bronze_ingest": 990063594521033,
+        "silver_transform": 581281071073289,
+        "gold_aggregate": 366404837787938,
     },
     "prod": {
         "bronze_ingest": None,

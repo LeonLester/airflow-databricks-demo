@@ -1,4 +1,4 @@
-.PHONY: init start stop restart logs-web logs-scheduler status shell-scheduler shell-webserver down
+.PHONY: init start stop restart logs-web logs-scheduler status shell-scheduler shell-webserver down test
 
 # First-time setup: initialise the DB and create the admin user
 init:
@@ -41,3 +41,7 @@ shell-scheduler:
 
 shell-webserver:
 	docker-compose exec airflow-webserver bash
+
+# Run DAG tests inside the scheduler container
+test:
+	docker-compose exec --user airflow airflow-scheduler python -m pytest /opt/airflow/tests/ -v

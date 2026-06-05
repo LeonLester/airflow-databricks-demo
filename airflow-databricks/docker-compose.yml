@@ -1,14 +1,13 @@
 x-airflow-common: &airflow-common
-  image: apache/airflow:2.8.1
+  build: .
   environment:
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-    # below is to have databricks in airflow connection types dropdown
-    _PIP_ADDITIONAL_REQUIREMENTS: 'apache-airflow-providers-databricks'
   volumes:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
+    - ./tests:/opt/airflow/tests
   depends_on:
     postgres:
       condition: service_healthy
