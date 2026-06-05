@@ -1,5 +1,7 @@
 from datetime import timedelta
+
 from airflow import DAG
+
 from config import DATABRICKS_CONN_ID, get_job_id
 
 
@@ -14,7 +16,7 @@ class BasePipeline:
     """
     Base class for all Airflow/Databricks pipelines.
     Centralises retries, failure callbacks, and connection config.
-    Job IDs and environment config live in config.py — not here.
+    Job IDs and environment config live in config.py, not here.
     """
 
     DATABRICKS_CONN_ID = DATABRICKS_CONN_ID

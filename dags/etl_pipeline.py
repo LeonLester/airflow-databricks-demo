@@ -1,6 +1,8 @@
 from datetime import datetime
+
 from airflow import DAG
 from airflow.providers.databricks.operators.databricks import DatabricksRunNowOperator
+
 from base_pipeline import BasePipeline
 
 
@@ -10,8 +12,7 @@ class EtlPipeline(BasePipeline):
         with DAG(
             dag_id="etl_pipeline",
             start_date=datetime(2026, 6, 3),
-            #         m h d m wd
-            schedule="0 6 * * *",    
+            schedule="0 6 * * *",
             catchup=False,
             default_args=self.DEFAULT_ARGS,
         ) as dag:
