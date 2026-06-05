@@ -9,11 +9,11 @@ import sys
 
 import pytest
 
-# Make the dags/ folder importable so DagBag can find config.py and base_pipeline.py
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "dags"))
 
-# Tell Airflow to run in unit test mode (skips DB calls)
 os.environ["AIRFLOW__CORE__UNIT_TEST_MODE"] = "True"
+os.environ["AIRFLOW__DATABASE__SQL_ALCHEMY_CONN"] = "sqlite://"
+
 DAG_FOLDER = os.path.join(os.path.dirname(__file__), "..", "dags")
 
 
@@ -32,32 +32,32 @@ def test_etl_pipeline_exists(dagbag):
 
 
 def test_etl_pipeline_task_count(dagbag):
-    dag = dagbag.get_dag("etl_pipeline")
+    dag = dagbag.dags["etl_pipeline"]
     assert len(dag.tasks) == 3
 
 
 def test_etl_pipeline_task_ids(dagbag):
-    dag = dagbag.get_dag("etl_pipeline")
+    dag = dagbag.dags["etl_pipeline"]
     task_ids = {t.task_id for t in dag.tasks}
     assert task_ids == {"bronze_ingest", "silver_transform", "gold_aggregate"}
 
 
 def test_etl_pipeline_dependency_order(dagbag):
-    dag = dagbag.get_dag("etl_pipeline")
-    silver = dag.get_task("silver_transform")
+    dag = dagbag.dags["etl_pipeline"]
+    silver = dag.task_dict["silver_transform"]
     assert "bronze_ingest" in {t.task_id for t in silver.upstream_list}
-    gold = dag.get_task("gold_aggregate")
+    gold = dag.task_dict["gold_aggregate"]
     assert "silver_transform" in {t.task_id for t in gold.upstream_list}
 
 
 def test_etl_pipeline_retries(dagbag):
-    dag = dagbag.get_dag("etl_pipeline")
+    dag = dagbag.dags["etl_pipeline"]
     for task in dag.tasks:
         assert task.retries >= 1, f"Task {task.task_id} has no retries configured"
 
 
 def test_etl_pipeline_failure_callback(dagbag):
-    dag = dagbag.get_dag("etl_pipeline")
+    dag = dagbag.dags["etl_pipeline"]
     for task in dag.tasks:
         assert task.on_failure_callback is not None, (
             f"Task {task.task_id} missing on_failure_callback"
@@ -65,10 +65,10 @@ def test_etl_pipeline_failure_callback(dagbag):
 
 
 def test_etl_pipeline_no_cycles(dagbag):
-    dag = dagbag.get_dag("etl_pipeline")
+    dag = dagbag.dags["etl_pipeline"]
     dag.topological_sort()
 
 
 def test_etl_pipeline_schedule(dagbag):
-    dag = dagbag.get_dag("etl_pipeline")
+    dag = dagbag.dags["etl_pipeline"]
     assert dag.schedule_interval == "0 6 * * *"
