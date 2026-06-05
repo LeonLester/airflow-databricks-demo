@@ -62,6 +62,6 @@ jobs:
       - name: Deploy bundle
         working-directory: infra
         env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_PROD }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_PROD }}
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
         run: databricks bundle deploy --target prod
