@@ -2,7 +2,6 @@ from datetime import datetime
 
 from airflow import DAG
 from airflow.providers.databricks.operators.databricks import DatabricksRunNowOperator
-
 from base_pipeline import BasePipeline
 
 

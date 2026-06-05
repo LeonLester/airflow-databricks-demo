@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 from airflow import DAG
-
 from config import DATABRICKS_CONN_ID, get_job_id
 
 
