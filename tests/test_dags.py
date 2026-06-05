@@ -12,7 +12,7 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "dags"))
 
 os.environ["AIRFLOW__CORE__UNIT_TEST_MODE"] = "True"
-os.environ["AIRFLOW__DATABASE__SQL_ALCHEMY_CONN"] = "sqlite://"
+os.environ["AIRFLOW__DATABASE__SQL_ALCHEMY_CONN"] = "sqlite:////tmp/airflow_test.db"
 
 DAG_FOLDER = os.path.join(os.path.dirname(__file__), "..", "dags")
 
