@@ -1,0 +1,6 @@
+# DAB / Terraform generated files
+.databricks/
+*.tfstate
+*.tfstate.backup
+.terraform/
+bundle.tf.json

@@ -1,0 +1,43 @@
+bundle:
+  name: airflow-databricks
+
+run_as:
+  user_name: leonidask914@gmail.com
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://dbc-a83393da-12c3.cloud.databricks.com
+      root_path: /Workspace/Users/leonidask914@gmail.com/bundles/airflow-databricks
+
+  prod:
+    mode: production
+    workspace:
+      host: https://dbc-a83393da-12c3.cloud.databricks.com  # replace with prod workspace URL
+
+resources:
+  jobs:
+    bronze_ingest:
+      name: bronze_ingest
+      tasks:
+        - task_key: bronze_ingest
+          notebook_task:
+            notebook_path: /Repos/${workspace.current_user.userName}/airflow-databricks/notebooks/bronze_ingest
+          # serverless compute — required for free tier workspaces
+          # replace with new_cluster config for paid workspaces
+
+    silver_transform:
+      name: silver_transform
+      tasks:
+        - task_key: silver_transform
+          notebook_task:
+            notebook_path: /Repos/${workspace.current_user.userName}/airflow-databricks/notebooks/silver_transform
+
+    gold_aggregate:
+      name: gold_aggregate
+      tasks:
+        - task_key: gold_aggregate
+          notebook_task:
+            notebook_path: /Repos/${workspace.current_user.userName}/airflow-databricks/notebooks/gold_aggregate
