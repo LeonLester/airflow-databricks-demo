@@ -3,6 +3,10 @@ name = "airflow-databricks"
 version = "0.1.0"
 requires-python = ">=3.10"
 
+[tool.setuptools.packages.find]
+where = ["."]
+include = []  # no packages to install, just deps
+
 dependencies = [
     "apache-airflow==2.8.1",
     "apache-airflow-providers-databricks==6.3.0",
